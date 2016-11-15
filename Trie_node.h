@@ -4,11 +4,11 @@
  *  - Select the current calendar term and enter the year
  *  - List students with whom you had discussions and who helped you
  *
- * uWaterloo User ID:  uwuserid @uwaterloo.ca
+ * uWaterloo User ID:  h397wang@uwaterloo.ca
  * Submitted for ECE 250
  * Department of Electrical and Computer Engineering
  * University of Waterloo
- * Calender Term of Submission:  (Winter|Spring|Fall) 201N
+ * Calender Term of Submission:  (Fall 2016)
  *
  * By submitting this file, I affirm that
  * I am the author of all modifications to
@@ -16,7 +16,7 @@
  *
  * The following is a list of uWaterloo User IDs of those students
  * I had discussions with in preparing this project:
- *    -
+ *    - 
  *
  * The following is a list of uWaterloo User IDs of those students
  * who helped me with this project (describe their help; e.g., debugging):
@@ -84,11 +84,7 @@ Trie_node *Trie_node::child( int n ) const {
 		return children[n];
 	}
 }
-
-//int Trie_node::charToIndex(char c) const{
-		
 	
-//}
 
 /*
 The string being searched for is being
@@ -101,20 +97,21 @@ recursively or return false, as appropriate. You must return the appropriate val
 including: when children are null, when the appropriate child pointer is assigned null, and
 otherwise. (O(n)).
 
-Input is guaranteed to be valid since error checks are done in the Trie.h
+Input
+string str: is guaranteed to be valid since error checks are done in the Trie.h
+int depth: recursion goes through each char in the str, depth describes the index of the char within the string 
 */
 bool Trie_node::member( std::string const &str, int depth ) const {
 	
-	
-	// check for base recursive case
+	// check for the recursion's base case
 	if (depth == str.size()){
 		if (is_terminal){
 			return true; 
 		}else{
 			return false;
 		}
-		
 	}
+	
 	
 	// check if the char at the specified "depth" is stored here
 	
@@ -129,19 +126,19 @@ bool Trie_node::member( std::string const &str, int depth ) const {
 	// map it to an integer by subtracting the ASCII value of "a"
 	index = c - 97; 
 	
-	// check for the char within the children array
+	// check whether or not there are even any children nodes
 	if (children == NULL){
 		return false;
 	}
 	
-	if (children[index] == NULL){ // then the word is obviously not stored
+	// check the particular child node that corresponds to the letter
+	if (children[index] == NULL){ 
 		return false;	
 	}
 	
 	// recursively search for it 
 	return children[index]->member(str, depth+1); 
 	
-
 }
 
 /*
@@ -153,8 +150,8 @@ appropriate sub-tree. This may require first assigning an array of 26 pointers t
 children in some cases, and it may require assigning a new Trie node to the kth sub-tree of this
 array. (O(n))
 
-*/
 
+*/
 bool Trie_node::insert( std::string const &str, int depth ) {
 	
 	// base case for recursion
@@ -172,9 +169,7 @@ bool Trie_node::insert( std::string const &str, int depth ) {
 	
 	// map it to an integer by subtracting the ASCII value of "a"
 	int index = c - 97; 
-	
-	//cout << "index of first letter " << index << endl;
-	
+		
 	if (children == NULL){
 		children = new Trie_node*[26];
 		// make them all null pointers
@@ -187,18 +182,16 @@ bool Trie_node::insert( std::string const &str, int depth ) {
 		children[index] = new Trie_node();
 	}
 	
-	
 	children[index]->setParent(this);	
-	
-	
+		
 	return children[index]->insert(str, depth+1);
 	
 }
 
 
-
 /*
-Called by the erase function, just make it safe
+Counts the number of children this node has.
+Called by the erase function
 */
 int Trie_node::countChildren() const{
 	
@@ -218,6 +211,7 @@ int Trie_node::countChildren() const{
 }
 
 
+// Required to traverse back up the tree
 Trie_node * Trie_node::getParent() const {
 	if (parent == NULL){
 		return NULL;
@@ -244,17 +238,23 @@ children array became entirely unassigned as a result of our erase, the current 
 erased. For example, in Figure 1, if the word "thoughts" was erased, then the nodes containing
 “o”, “u”, “g”, “h”, ”t”, and “s” must be deleted and the appropriate sub-child of the node
 containing “h” must be set to null. (O(n))
+
+Input: 
+string str: is garuanteed to exist in the tree based on prior checks
+int depth: same as others
+ptr_to_this: pointer to a node along the path towards the terminal node. This node
+is updated (see conditions below) as we traverse down the tree. Upon reaching the terminal node, if the terminal node is 
+a leaf, then we traverse up the tree and delete every node until we reach this ptr_to_this.
+the node pointed to by ptr_to_this would NOT be deleted..   
+
+Output: garuanteed to return true from this point because the membership was already determined
 */
 
-
-// already checked to garantee the existence of the word in the tree...
 bool Trie_node::erase( std::string const &str, int depth, Trie_node *&ptr_to_this ) {
 	
 	// We've reached the base of the recursion
 	if (depth == str.size()){ 
-		
-		//cout << "Base case reached " << endl;
-		
+			
 		// first clear the terminal flag
 		is_terminal = false;
 		
@@ -262,13 +262,17 @@ bool Trie_node::erase( std::string const &str, int depth, Trie_node *&ptr_to_thi
 			
 			return true;
 		
-		}else{  // Delete every node in the path from ptr_to_this (exclusive) to this node (inclusive) 		
+		}else{  	
 			
-			
-			// Since clear deletes the pointer that it was called on, get the child of ptr_to_this
+			// Delete every node in the path from ptr_to_this (exclusive) to this node (inclusive) 	
+					
 			Trie_node * currentPtr = getParent();
-			int d = depth-1;
-			Trie_node * root;
+			
+			// basically the depth as a traverse back up it lol
+			int d = depth-1; 
+			
+			// I need a pointer to the root_node eventually...too lazy to learn friend shit
+			Trie_node * root; 
 			while (currentPtr != ptr_to_this){
 				
 				for (int i = 0; i < CHARACTERS; i++){
@@ -278,15 +282,15 @@ bool Trie_node::erase( std::string const &str, int depth, Trie_node *&ptr_to_thi
 				}
 				
 				delete [] currentPtr->children;				
+				// um dont do this here, it messes things up lol i dunno why
+				//currentPtr->children = NULL;
 				root = currentPtr;
 				currentPtr = currentPtr->getParent();
 				
 				d = d-1;
 			}
 			
-			// At this point, currentPtr is the special node that should not be deleted..
-			// dont delete all of em...
-			// unless there's only one child....
+			
 			if (currentPtr != NULL){
 				char c = str[d];
 				
