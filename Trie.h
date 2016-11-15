@@ -96,7 +96,7 @@ The constructor sets the pointer to children to null and sets the Boolean flag t
 Accessors
 This Trie_node class has two accessors:
 • Trie_node *child( int n ) const - Return a pointer to the n-th child. If the children array is empty,
-return nullptr; otherwise, just return children[i]. This member function will never be called with a
+return NULL; otherwise, just return children[i]. This member function will never be called with a
 value outside 0 to 25. (O(1))
 • bool member( std::string const &str, int depth ) const - The string being searched for is being
 passed recursively; however, as we go deeper into the tree, we must have access to the character
@@ -160,9 +160,6 @@ containing “h” must be set to null. (O(n))
 #ifndef TRIE_H
 #define TRIE_H
 
-#ifndef nullptr
-#define nullptr 0
-#endif
 
 #include "ece250.h"
 #include "Trie_node.h"
@@ -198,12 +195,15 @@ class Trie {
 	friend std::ostream &operator<<( std::ostream &, Trie const & );
 };
 
-Trie::Trie():root_node( nullptr ), trie_size( 0 ) {
+Trie::Trie():root_node( NULL ), trie_size( 0 ) {
 	// empty constructor
 }
 
+
 Trie::~Trie() {
-	delete root_node;
+	cout << "Destructor called" << endl;
+	clear();
+	// clear already deletes the root node
 }
 
 int Trie::size() const {
@@ -234,6 +234,8 @@ bool Trie::illegalArgument(std::string const &str) const{
 	return false;
 	
 }
+
+
 /*
 Return true if the word represented by the string is in the
 Trie and false otherwise. If the string contains any characters other than those of the English
@@ -245,7 +247,12 @@ bool Trie::member( std::string const &str ) const {
 		throw illegal_argument();
 	}
 	
-	// call the recursive member function
+	// first check if its empty
+	if (empty()){
+		return false;
+	}
+	
+	// call the recursive member function. root node garanteed to be not NULL pointer
 	return root_node->member(str, 0);
 	
 }
@@ -259,6 +266,7 @@ if the root node is null, it will be necessary create an instance of the Trie_no
 to the root first. (O(n))
 */
 bool Trie::insert( std::string const &str ) {
+	
 	if (illegalArgument(str)){
 		throw illegal_argument();
 	}
@@ -268,11 +276,18 @@ bool Trie::insert( std::string const &str ) {
 		return false;
 	}
 	
-	if (root_node == nullptr){
+	//cout << "member function returned " << endl;
+	
+	if (root_node == NULL){
 		root_node = new Trie_node();
 	}
 	
+	//cout << "Before root-insert " << endl;
 	root_node->insert(str, 0);
+	//cout << "After root-insert " << endl;
+	
+	trie_size++;
+	
 	return true;
 	
 }
@@ -286,12 +301,13 @@ calls erase on the root. If the word erased is the last one in the tree, delete 
 */
 
 bool Trie::erase( std::string const &str ) {
+	
 	if (illegalArgument(str)){
 		throw illegal_argument();
 	}
 	
-	// empty implies root is null
-	if (empty()){
+	// implies is empty...
+	if (root_node == NULL){
 		return false;
 	}
 	
@@ -300,7 +316,17 @@ bool Trie::erase( std::string const &str ) {
 	}
 	
 	// if size == 1 then delete the root ptr
-	root_node->erase(str, 0, root_node);	
+	Trie_node * inPtr = NULL;
+	root_node->erase(str, 0, inPtr);
+	// was passing in root_node but memory was not being deallocated properly
+		
+	trie_size--;
+		
+	if (trie_size == 0){ // last word was deleted, delete root
+		// clear function would automatically call delete on root_node
+		root_node = NULL;
+	}
+	
 	return true;
 
 }
@@ -311,17 +337,21 @@ clear on the root and set the appropriate member variables. (O(N) where N is the
 words in the tree)
 */
 void Trie::clear() {
-	if (!empty()){
+	
+	// recursive
+	if (!empty() && root_node != NULL){ // being empty implies that root_node is null
 		root_node->clear();	
+		delete root_node; 
+		root_node = NULL;
 	}
+	
 	trie_size = 0;
 	
-	root_node = nullptr; // or delete it?
-
 }
 
 // You can modify this function however you want:  it will not be tested
 std::ostream &operator<<( std::ostream &out, Trie const &trie ) {
+	
 	
 	return out;
 }
